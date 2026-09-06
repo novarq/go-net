@@ -63,12 +63,12 @@ const (
 	FeatureStatus      = (1 << 16)
 	FeatureSpeedDuplex = (1 << 63)
 
-	DriverFeatures = FeatureChecksum | FeatureMTU | FeatureMAC | FeatureStatus | FeatureSpeedDuplex
+	DriverFeatures = FeatureMTU | FeatureMAC | FeatureStatus | FeatureSpeedDuplex
 )
 
 // Header flags
 const (
-	NeedsChecksum = 0
+	NeedsChecksum = 1
 )
 
 // Header represents a VirtIO network device header (virtio_net_hdr)
@@ -157,7 +157,7 @@ func (hw *Net) Init() (err error) {
 	}
 
 	if features := hw.Transport.NegotiatedFeatures(); features&FeatureMTU == FeatureMTU {
-		if mtu := hw.Config().MTU; hw.MTU-header.EthernetMaximumSize > mtu {
+		if mtu := hw.Config().MTU; hw.MTU > mtu {
 			return errors.New("incompatible MTU")
 		}
 	}
