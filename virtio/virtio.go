@@ -82,7 +82,10 @@ type Header struct {
 	NumBuffers uint16 // not used in legacy drivers
 }
 
-const headerLength = 12
+const (
+	legacyHeaderLength = 10
+	headerLength       = 12
+)
 
 // Bytes converts the descriptor structure to byte array format.
 func (d *Header) Bytes() []byte {
@@ -118,8 +121,9 @@ type Net struct {
 	// Interrupt ID
 	IRQ int
 
-	// HeaderLength allows to override the VirtIO network device header
-	// length as some implementations, such as QEMU, omit certain fields.
+	// HeaderLength overrides the VirtIO network device header length,
+	// which otherwise is 12 bytes when VIRTIO_F_VERSION_1 is negotiated
+	// and 10 bytes when it is not.
 	HeaderLength int
 
 	// Maximum Transmission Unit
@@ -167,7 +171,11 @@ func (hw *Net) Init() (err error) {
 	}
 
 	if hw.HeaderLength == 0 {
-		hw.HeaderLength = headerLength
+		hw.HeaderLength = legacyHeaderLength
+
+		if hw.Transport.NegotiatedFeatures()&(1<<virtio.Version1) != 0 {
+			hw.HeaderLength = headerLength
+		}
 	}
 
 	hw.rx = hw.initQueue(ReceiveQueue, virtio.Write)
