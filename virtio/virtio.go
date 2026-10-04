@@ -245,11 +245,14 @@ func (hw *Net) Receive(buf []byte) (n int, err error) {
 
 // Transmit transmits a single network frame, the checksum is appended
 // automatically and must not be included.
-func (hw *Net) Transmit(buf []byte) (_ error) {
+func (hw *Net) Transmit(buf []byte) (err error) {
 	hdr := make([]byte, hw.HeaderLength)
 	buf = append(hdr, buf...)
 
-	hw.tx.Push(buf)
+	if err = hw.tx.Push(buf); err != nil {
+		return
+	}
+
 	hw.Transport.QueueNotify(TransmitQueue)
 
 	return
